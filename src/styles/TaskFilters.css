@@ -1,0 +1,68 @@
+.task-filters {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-clear-filters {
+  background-color: #f44336;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  width: 100%;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.btn-clear-filters:hover {
+  background-color: #da190b;
+}
+
+@media (max-width: 768px) {
+  .filter-group {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .filter-group label {
+    margin-bottom: -0.5rem;
+  }
+}

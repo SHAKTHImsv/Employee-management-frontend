@@ -1,0 +1,162 @@
+:root {
+  /* Colorful Workspace Theme Base Links */
+  --bg-card: #ffffff;
+  --text-main: #1e1b4b;
+  --radius-lg: 16px;
+  --shadow-md: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(79, 70, 229, 0.04);
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Precise Component Colors */
+  --stat-total-text: #4f46e5;
+  --stat-total-bg: #e0e7ff;
+  --stat-completed-text: #16a34a;
+  --stat-completed-bg: #dcfce7;
+  --stat-progress-text: #ea580c;
+  --stat-progress-bg: #ffedd5;
+  --stat-todo-text: #2563eb;
+  --stat-todo-bg: #dbeafe;
+  --stat-high-text: #dc2626;
+  --stat-high-bg: #fee2e2;
+}
+
+/* Stats Layout Wrapper Grid */
+.task-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Premium Rounded Card Shell */
+.stat-card {
+  background: var(--bg-card);
+  padding: 1.75rem 1.25rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover Interactive Spring Lift Effect */
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 30px -10px rgba(79, 70, 229, 0.15);
+}
+
+/* Bold Prominent Metrics Numbers */
+.stat-number {
+  font-size: 2.75rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+/* Refined Small Label Tags */
+.stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- Dynamic Colorful Card Themes --- */
+
+/* Total Tasks Card */
+.stat-card.total {
+  background: linear-gradient(180deg, #ffffff 60%, var(--stat-total-bg) 100%);
+  border-bottom: 3px solid var(--stat-total-text);
+}
+.stat-card.total .stat-number {
+  color: var(--stat-total-text);
+}
+
+/* Completed Tasks Card */
+.stat-card.completed {
+  background: linear-gradient(180deg, #ffffff 60%, var(--stat-completed-bg) 100%);
+  border-bottom: 3px solid var(--stat-completed-text);
+}
+.stat-card.completed .stat-number {
+  color: var(--stat-completed-text);
+}
+
+/* In Progress Tasks Card */
+.stat-card.in-progress {
+  background: linear-gradient(180deg, #ffffff 60%, var(--stat-progress-bg) 100%);
+  border-bottom: 3px solid var(--stat-progress-text);
+}
+.stat-card.in-progress .stat-number {
+  color: var(--stat-progress-text);
+}
+
+/* To-Do Tasks Card */
+.stat-card.todo {
+  background: linear-gradient(180deg, #ffffff 60%, var(--stat-todo-bg) 100%);
+  border-bottom: 3px solid var(--stat-todo-text);
+}
+.stat-card.todo .stat-number {
+  color: var(--stat-todo-text);
+}
+
+/* High Priority Tasks Card */
+.stat-card.high-priority {
+  background: linear-gradient(180deg, #ffffff 60%, var(--stat-high-bg) 100%);
+  border-bottom: 3px solid var(--stat-high-text);
+}
+.stat-card.high-priority .stat-number {
+  color: var(--stat-high-text);
+}
+
+/* --- Responsive Layout Breakpoints --- */
+@media (max-width: 1024px) {
+  .task-stats {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .stat-number {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .task-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1.5rem 1rem;
+  }
+
+  /* Force the final odd high priority metric card to bridge full width on tablet layout */
+  .stat-card.high-priority {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card.high-priority {
+    grid-column: span 1;
+  }
+}

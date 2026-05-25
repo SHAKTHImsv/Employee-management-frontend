@@ -1,55 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { taskAPI } from '../services/api';
 import TaskForm from '../components/TaskForm';
 import TaskList from '../components/TaskList';
 import TaskFilters from '../components/TaskFilters';
 import TaskStats from '../components/TaskStats';
 import '../styles/Dashboard.css';
 
-// Local Mock Task Dataset
-const INITIAL_DUMMY_TASKS = [
-  {
-    _id: 'task-1',
-    title: '🚀 Launch Marketing Campaign',
-    description: 'Prepare and deploy the Q2 email sequence and social media assets across platforms.',
-    status: 'in-progress',
-    priority: 'high',
-    dueDate: '2026-06-01',
-    createdAt: '2026-05-20'
-  },
-  {
-    _id: 'task-2',
-    title: '🔒 Secure Authentication Flow',
-    description: 'Audit the session persistence and local storage handling to fix the page refresh bug.',
-    status: 'completed',
-    priority: 'high',
-    dueDate: '2026-05-25',
-    createdAt: '2026-05-18'
-  },
-  {
-    _id: 'task-3',
-    title: '🎨 Polish Dashboard UI Aesthetics',
-    description: 'Implement vibrant CSS variables, glassmorphism cards, and spring animations.',
-    status: 'in-progress',
-    priority: 'medium',
-    dueDate: '2026-05-28',
-    createdAt: '2026-05-24'
-  },
-  {
-    _id: 'task-4',
-    title: '📝 Write Core API Documentation',
-    description: 'Document all available CRUD endpoints, filter params, and status code variations.',
-    status: 'todo',
-    priority: 'low',
-    dueDate: '2026-06-15',
-    createdAt: '2026-05-25'
-  }
-];
-
 const Dashboard = () => {
-  const [tasks, setTasks] = useState(INITIAL_DUMMY_TASKS);
-  const [displayedTasks, setDisplayedTasks] = useState(INITIAL_DUMMY_TASKS);
+  const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState(null);
   const [filters, setFilters] = useState({ status: '', priority: '', search: '' });
   const [sortBy, setSortBy] = useState('createdAt');
@@ -57,6 +17,7 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   
+  // Extract custom unified loading attribute from context
   const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -67,70 +28,69 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Metric Calculation Engine
-  const calculateStats = useCallback((allTasks) => {
-    setStats({
-      total: allTasks.length,
-      completed: allTasks.filter(t => t.status === 'completed').length,
-      'in-progress': allTasks.filter(t => t.status === 'in-progress').length,
-      todo: allTasks.filter(t => t.status === 'todo').length,
-      'high-priority': allTasks.filter(t => t.priority === 'high').length
-    });
+  // Memoized task fetcher to satisfy ESLint dependency checks safely
+  const fetchTasks = useCallback(async () => {
+    try {
+      setLoadingTasks(true);
+      const response = await taskAPI.getTasks({ ...filters, sortBy });
+      setTasks(response.data.tasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoadingTasks(false);
+    }
+  }, [filters, sortBy]);
+
+  // Memoized metric stats fetcher
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await taskAPI.getTaskStats();
+      setStats(response.data.stats);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   }, []);
 
-  // Client Filter & Sort Processing Engine
-  const processTasks = useCallback(() => {
-    setLoadingTasks(true);
-    let result = [...tasks];
-
-    if (filters.status) result = result.filter(t => t.status === filters.status);
-    if (filters.priority) result = result.filter(t => t.priority === filters.priority);
-    if (filters.search) {
-      result = result.filter(t => 
-        t.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        t.description.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-
-    result.sort((a, b) => {
-      if (sortBy === 'dueDate') return new Date(a.dueDate) - new Date(b.dueDate);
-      if (sortBy === 'priority') {
-        const weight = { high: 3, medium: 2, low: 1 };
-        return weight[b.priority] - weight[a.priority];
-      }
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-
-    setDisplayedTasks(result);
-    calculateStats(tasks);
-    setLoadingTasks(false);
-  }, [tasks, filters, sortBy, calculateStats]);
-
+  // Data fetching sync effect loop
   useEffect(() => {
     if (user) {
-      processTasks();
+      fetchTasks();
+      fetchStats();
     }
-  }, [user, processTasks]);
+  }, [user, fetchTasks, fetchStats]);
 
   const handleFilterChange = (newFilters) => setFilters(newFilters);
 
-  const handleAddTask = (taskData) => {
-    const newTask = {
-      _id: `task-${Date.now()}`,
-      ...taskData,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setTasks(prev => [newTask, ...prev]);
-    setShowForm(false);
+  const handleAddTask = async (taskData) => {
+    try {
+      await taskAPI.createTask(taskData);
+      fetchTasks();
+      fetchStats();
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
 
-  const handleUpdateTask = (taskId, taskData) => {
-    setTasks(prev => prev.map(t => t._id === taskId ? { ...t, ...taskData } : t));
-    setEditingTask(null);
+  const handleUpdateTask = async (taskId, taskData) => {
+    try {
+      await taskAPI.updateTask(taskId, taskData);
+      fetchTasks();
+      fetchStats();
+      setEditingTask(null);
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
 
-  const handleDeleteTask = (taskId) => {
-    setTasks(prev => prev.filter(t => t._id !== taskId));
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await taskAPI.deleteTask(taskId);
+      fetchTasks();
+      fetchStats();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -138,6 +98,7 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  // Guard execution paths if authentication initialization is rendering
   if (authLoading) {
     return <div className="loading">Gathering your universe...</div>;
   }
@@ -193,7 +154,7 @@ const Dashboard = () => {
               <div className="loading">Updating task stacks...</div>
             ) : (
               <TaskList
-                tasks={displayedTasks}
+                tasks={tasks}
                 onUpdate={handleUpdateTask}
                 onDelete={handleDeleteTask}
                 editingTask={editingTask}

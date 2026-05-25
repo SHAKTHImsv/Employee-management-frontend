@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { taskAPI } from '../services/api';
@@ -28,15 +28,8 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Data fetching hook
-  useEffect(() => {
-    if (user) {
-      fetchTasks();
-      fetchStats();
-    }
-  }, [filters, sortBy, user]);
-
-  const fetchTasks = async () => {
+  // Memoized task fetcher to satisfy ESLint dependency checks safely
+  const fetchTasks = useCallback(async () => {
     try {
       setLoadingTasks(true);
       const response = await taskAPI.getTasks({ ...filters, sortBy });
@@ -46,16 +39,25 @@ const Dashboard = () => {
     } finally {
       setLoadingTasks(false);
     }
-  };
+  }, [filters, sortBy]);
 
-  const fetchStats = async () => {
+  // Memoized metric stats fetcher
+  const fetchStats = useCallback(async () => {
     try {
       const response = await taskAPI.getTaskStats();
       setStats(response.data.stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
+
+  // Data fetching sync effect loop
+  useEffect(() => {
+    if (user) {
+      fetchTasks();
+      fetchStats();
+    }
+  }, [user, fetchTasks, fetchStats]);
 
   const handleFilterChange = (newFilters) => setFilters(newFilters);
 
